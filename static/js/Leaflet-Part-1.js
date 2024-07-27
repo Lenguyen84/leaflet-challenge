@@ -1,19 +1,19 @@
-// Store our API endpoint as queryUrl.
+// Import and visualize data - plot all earthquakes from the past 7 days on a map
+// Store API endpoint
 let queryurl = "https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_week.geojson";
 
 // Perform a GET request to query URL
 d3.json(queryurl).then(function (data) {
     createFeatures(data.features);
 })
-    
-function createFeatures(earthquakeData) {
 
+function createFeatures(earthquakeData) {
 // Set data markers to reflect magnitude by size and depth of earthquake by color
     function createCircleMarker(feature, latlng) {
         console.log("Feature:", feature);
         console.log("LatLng:", latlng);
 
-        let circle = {
+        let options = {
             radius: feature.properties.mag * 5,
             fillColor: getColor(feature.geometry.coordinates[2]),
             color: "black",
@@ -21,26 +21,32 @@ function createFeatures(earthquakeData) {
             opacity: 1,
             fillOpacity: 0.8
         };
-        return L.circleMarker(latlng, circle);
+        return L.circleMarker(latlng, options);
     }
 
-    // Define a function that we want to run once for each feature in the features array.
-    // Ref. to https://github.com/pointhi/leaflet-color-markers for color code
+    // Define a function to determine the color based on earhtquake depth
     function getColor(depth) {
-        if (depth < 10) return "#3274A3";
-            else if (depth < 30) return "#C1A32D";
-            else if (depth < 50) return "#982E40";
-            else if (depth < 70) return "#31882A";
-            else if (depth < 90) return "#98652E";
-            else return "#742E98";
-
+        if (depth < 10) {
+            return "#BEF573";
+        } else if (depth < 30) {
+            return "#EDEB29";
+        } else if (depth < 50) {
+            return "#FBC927";
+        } else if (depth < 70) {
+            return "#F99619";
+        } else if (depth < 90) {
+            return "#FF9D73";
+        } else {
+            return "#FA3B2E";
+        }
     }
 
-// Create a GeoJSOn layer that contain the features array on the earthquakedata object, plus bind a popup that describes the location, time, and magnitude of the earthquake
+ // Create a GeoJSOn layer that contain the features array on the earthquakedata object
+ // Give each feature a popup that describes the place, time, and magnitude of the earthquake
     let earthquakes = L.geoJSON(earthquakeData, {
         pointToLayer: createCircleMarker,
         onEachFeature: function (feature, layer) {
-        
+            // layer.bindPopup(`<h3>${feature.properties.place}</h3><hr><p>${new Date(feature.properties.time)}</p>`);
             layer.on('mouseover', function() { 
                 layer.bindPopup(`<b>Location:${feature.properties.place}</b><br><b>Magnitude: ${feature.properties.mag}</b><br><b>Depth: ${feature.geometry.coordinates[2]}</b>`).openPopup();
             });
@@ -74,6 +80,7 @@ legend.onAdd = function (map) {
     div.innerHTML = '<h4>Depth</h4>';
 
     // Loop through legend data and add color blocks
+    // Xpert Learning Assistant was used to identify and troubleshoot legend code
     for (let i = 0; i < legendData.length; i++) {
         let item = legendData[i];
         let colorBlock = document.createElement('div');
@@ -86,11 +93,13 @@ legend.onAdd = function (map) {
     return div;
 };
     
-    // Let Map
 function createMap(earthquakes) {
     
-     let myMap = L.map("map", {
-        center: [37.09, -95.71],
+    // Create map
+    let myMap = L.map("map", {
+        center: [
+          37.09, -95.71
+        ],
         zoom: 5
       });
 
